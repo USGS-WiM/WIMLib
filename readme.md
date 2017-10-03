@@ -3,7 +3,7 @@
 </a>
 
 # Summary
-WiMLib is a custom reusable libraries and objects for handling geojson, logging, and spatial operations leveraging ESRI ArGIS.
+WiMPy is a custom reusable libraries and objects for handling geojson, logging, and spatial operations leveraging ESRI ArGIS.
 
 ## Requirements
 
