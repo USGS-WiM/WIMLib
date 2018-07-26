@@ -4,11 +4,12 @@ with open("readme.md", "r") as fh:
 
 setuptools.setup(
     name='WIMLib',
-    version='0.0.1',
+    version='0.0.2',
     packages=setuptools.find_packages(),
     description='WIMLib is a custom reusable libraries and objects for handling geojson, logging, and other spatial operations leveraging ESRI ArGIS.',
     long_description=long_description,
     long_description_content_type="text/markdown",
+	license='Public Domain',
     url='https://github.com/USGS-WiM/WIMLib',
     author='Jeremy K. Newson Web Informatics and Mapping',
     author_email='jknewson@usgs.gov',
