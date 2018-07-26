@@ -24,7 +24,7 @@ import certifi
 import json
 import string
 import traceback
-from  WiMLib import WiMLogging
+from  WIMLib import WiMLogging
 import re
 
 from datetime import date, timedelta
@@ -48,7 +48,7 @@ class ServiceAgentBase(object):
             #below is temporary for batch jkn
             try:
                 response = requests.get(url)
-                return response.text
+                return response.json()
             except:
                 self._sm("Error: file " + os.path.basename(resource) + " does not exist within Gages iii", 1.62, 'ERROR')
                 return ''

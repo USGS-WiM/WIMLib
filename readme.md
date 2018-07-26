@@ -1,8 +1,11 @@
 ![WiM](wimlogo.png)
 
-# WIMPy
+# WIMLib
 
-WiMPY is a custom reusable libraries and objects for handling geojson, logging, and spatial operations leveraging ESRI ArGIS.
+WIMLib is a custom reusable libraries and objects for handling geojson, logging, and spatial operations leveraging ESRI ArGIS.
+
+### Installing
+[ python WIMLib package](https://pypi.org/project/WIMLib/): `pip install WIMLib`
 
 ### Prerequisites
 ArcGIS 10.x

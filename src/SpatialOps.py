@@ -33,9 +33,10 @@ from arcpy.sa import *
 from arcpy import env
 import traceback
 import json
-from  WiMLib import WiMLogging
+from  WIMLib import WiMLogging
 from contextlib import contextmanager
 import PrismOps
+import numpy as np
 #endregion
 
 ##-------1---------2---------3---------4---------5---------6---------7---------8
@@ -55,7 +56,10 @@ class SpatialOps(object):
         self._sm("initialized spatialOps")
     def __exit__(self, exc_type, exc_value, traceback):
         try:
-            shutil.rmtree(self._TempLocation)
+            shutil.rmtree(self._TempLocation, True)
+
+            arcpy.ResetEnvironments()
+            arcpy.ClearEnvironment("workspace")
         except:
             self._sm("Failed to remove temp space on close","ERROR",50)
     
@@ -104,23 +108,49 @@ class SpatialOps(object):
             out_projected_fc= None
             path =""
             name =""
-            if source_curs != None: del source_curs
-            if ins_curs != None: del ins_curs
-            if row != None: del row
+            if source_curs is not None: del source_curs
+            if ins_curs is not None: del ins_curs
+            if row is not None: del row
     def PersistFeature(self,inFeature, path, name):
         arcpy.FeatureClassToFeatureClass_conversion(inFeature,path,name)
     def getAreaSqMeter(self, inFeature):
-        AreaValue = -999
+        AreaValue = 0
         try:
+
             sr = arcpy.Describe(inFeature).spatialReference
+            if(sr.type == "Geographic"):
+                #USA_Contiguous_Albers_Equal_Area_Conic_USGS_version:
+                inFeature = self.ProjectFeature(inFeature,arcpy.SpatialReference(102039))[0]
+                sr = arcpy.Describe(inFeature).spatialReference
+
             cursor = arcpy.da.SearchCursor(inFeature, "SHAPE@")
             for row in cursor:
-                AreaValue = row[0].area * sr.metersPerUnit * sr.metersPerUnit 
-                break
+                AreaValue += row[0].area * sr.metersPerUnit * sr.metersPerUnit 
+                
             return AreaValue if (AreaValue > 0) else None
         except:
             tb = traceback.format_exc()
-            self.sm("Error computing area "+tb,"ERROR")
+            self._sm("Error computing area "+tb,"ERROR")
+            return None 
+        
+    def getAreaSqKilometer(self, inFeature):
+        AreaValue = 0
+        try:
+
+            sr = arcpy.Describe(inFeature).spatialReference
+            if(sr.type == "Geographic"):
+                #USA_Contiguous_Albers_Equal_Area_Conic_USGS_version:
+                inFeature = self.ProjectFeature(inFeature,arcpy.SpatialReference(102039))[0]
+                sr = arcpy.Describe(inFeature).spatialReference
+
+            cursor = arcpy.da.SearchCursor(inFeature, "SHAPE@")
+            for row in cursor:
+                AreaValue += row[0].getArea(units='SQUAREKILOMETERS') * sr.metersPerUnit * sr.metersPerUnit 
+                
+            return AreaValue if (AreaValue > 0) else None
+        except:
+            tb = traceback.format_exc()
+            self._sm("Error computing area "+tb,"ERROR")
             return None 
     def spatialJoin(self, inFeature, maskfeature, fieldStr='',methodStr ='' ):
         mask = None
@@ -129,8 +159,8 @@ class SpatialOps(object):
             sr = arcpy.Describe(inFeature).spatialReference
             mask = self.ProjectFeature(maskfeature,sr) 
             out_projected_fc = os.path.join(self._TempLocation, "ovrlytmpsj")
-
-            if(doFieldMapping):
+            
+            if(fieldStr != '' and methodStr != ''):
                 # Create a new fieldmappings and add the two input feature classes.
                 fieldmappings = arcpy.FieldMappings()
                 fieldmappings.addTable(mask)
@@ -153,8 +183,8 @@ class SpatialOps(object):
             return arcpy.SpatialJoin_analysis(maskfeature, inFeature, out_projected_fc,'', '', fieldmappings,"COMPLETELY_CONTAINS")
 
         except:
-             tb = traceback.format_exc()
-             self._sm(tb,"Error",152)
+            tb = traceback.format_exc()
+            self._sm(tb,"Error",152)
         finally:
             mask = None
             #do not release
@@ -170,13 +200,13 @@ class SpatialOps(object):
             return arcpy.SpatialJoin_analysis(maskfeature, inFeature, out_projected_fc,'JOIN_ONE_TO_MANY', 'KEEP_COMMON', None, matchOption)
 
         except:
-             tb = traceback.format_exc()
-             self._sm(tb,"Error",152)
+            tb = traceback.format_exc()
+            self._sm(tb,"Error",152)
         finally:
             mask = None 
             #do not release
             out_projected_fc = None      
-    def getFeatureStatistic(self, inFeature, maskFeature, statisticRules, fieldStr, SelectionField, SelectionYear, matchOption = "COMPLETELY_CONTAINS"):
+    def getFeatureStatistic(self, inFeature, maskFeature, statisticRules, fieldStr, WhereClause = "", matchOption = "COMPLETELY_CONTAINS"):
         '''
         computes the statistic 
         Statistic rules, semicolon separated
@@ -210,33 +240,41 @@ class SpatialOps(object):
             #next Field
 
             spOverlay = self.spatialOverlay(inFeature,maskFeature,matchOption)
+            
+            #Validate that we have values within the polygon/basin
+            #   If we do not, set all values equal to zero
             if(int(arcpy.GetCount_management(spOverlay).getOutput(0)) < 1):
+                self._sm("Basin contains no features", "WARNING")
                 for m in map: values[m[0]]={m[1]: float(0)}
                 return values
             #endif
 
+            #If we do have values, then carry out spatial statistics
             tblevalue = arcpy.Statistics_analysis(spOverlay,os.path.join(self._TempLocation, "ftmp"),map)
             mappedFeilds = [x[1]+"_"+x[0] for x in map]
-            if SelectionYear > 0:
-                whereClause = "{} <= {}".format(SelectionField, SelectionYear)
-            else:
-                whereClause = ""
+            whereClause = WhereClause
+            self._sm("The WhereClause is: " + whereClause)
             cursor = arcpy.da.SearchCursor(tblevalue, mappedFeilds, whereClause)
-            for row in cursor:
-                i=0
-                for m in map:
-                    values[m[0]]={m[1]: float(row[i])}
-                    i+=1
-
-            return values
+            try:
+                for row in cursor:
+                    i=0
+                    for m in map:
+                        values[m[0]]={m[1]: float(row[i])}
+                        i+=1
+                return values
+            #Is an except catch for when row contains nothing
+            except:
+                self._sm("Now rows were found in cursor. Setting values to zero.", "WARNING")
+                for m in map: values[m[0]]={m[1]: float(0)}
+                return values
         except:
             tb = traceback.format_exc()
             self._sm("Failed to get raster statistic " +tb,"ERROR",229)
         finally:
             #local cleanup
-            if cursor != None: del cursor; cursor = None            
-            if tblevalue != None: del tblevalue; tblevalue = None
-            if spOverlay != None: del spOverlay; spOverlay = None
+            if cursor is not None: del cursor; cursor = None            
+            if tblevalue is not None: del tblevalue; tblevalue = None
+            if spOverlay is not None: del spOverlay; spOverlay = None
     def getFeatureCount(self,inFeature, maskFeature):
         '''
         Finds the number of features
@@ -251,7 +289,7 @@ class SpatialOps(object):
             self._sm("Failed to get raster statistic " +tb,"ERROR",229)
         finally:
             #local cleanup
-            if spOverlay != None: del spOverlay; spOverlay = None                     
+            if spOverlay is not None: del spOverlay; spOverlay = None                     
     #endregion
 
     #region Raster methods
@@ -372,23 +410,26 @@ class SpatialOps(object):
             self._LicenseManager("Spatial")
             outExtractByMask = arcpy.sa.ExtractByMask(inRaster, mask)
             value = arcpy.GetRasterProperties_management(outExtractByMask, statisticRule)
+            cellsize = float(arcpy.GetRasterProperties_management(inRaster, 'CELLSIZEX').getOutput(0))**2 # -- Added by JWX from below.
             return float(value.getOutput(0))
         except:
             tb = traceback.format_exc()
-            self._sm("Failed to get raster statistic computing centroid value.","WARNING",229)
+            self._sm("WARNING: Failed to get raster statistic computing centroid value.","WARNING",229)
             cellsize = float(arcpy.GetRasterProperties_management(inRaster, 'CELLSIZEX').getOutput(0))**2
             self._sm("Raster cell size: " + str(cellsize) , "WARNING")
             maskArea = self.getAreaSqMeter(self.mask)
             maskArea = maskArea*0.000001
             centValue = self.getValueAtCentroid(maskFeature,inRaster)            # try getting centroid
-            return (maskArea/cellsize)*centValue
+            if centValue in ['NaN', 'none', 0]:
+                self._sm("WARNING: Raster statistic AND get value at centroid failed. Results likely erroneous.","WARNING")
+            return ((maskArea/cellsize)*centValue)*cellsize #Added cellsize multiplier -- JWX
         finally:
             outExtractByMask = None           
             mask = None
-            if sr != None: del sr; sr = None
+            if sr is not None: del sr; sr = None
             self._LicenseManager("Spatial",False)       
             
-    def getPrismStatistic(self,inRaster, maskFeature, statisticRule, dataPath):
+    def getPrismStatistic(self,inRaster, maskFeature, statisticRules, timeRange, timeMethod, dataPath):
         '''
         computes the statistic 
         Statistic rules:    MINIMUM —Smallest value of all cells in the input raster.
@@ -445,11 +486,16 @@ class SpatialOps(object):
             
             outExtractByMask = arcpy.sa.ExtractByMask(inRaster, mask)
             
-            if statisticRule.upper() in ['MINIMUM', 'MAXIMUM','MEAN','STD','UNIQUEVALUECOUNT']:
+            rules = ['MINIMUM', 'MAXIMUM','MEAN','STD','UNIQUEVALUECOUNT', 'SUM']
+            statisticRules = [x.upper() for x in statisticRules.split(';')]
+            computation = np.all([x in rules for x in statisticRules])
+            
+            if computation == True:
                 rasterCellIdx = arcpy.RasterToNumPyArray(outExtractByMask, nodata_to_value = -9999.00)
-                return float(PrismOps.get_statistic(rasterCellIdx, dataPath, statisticRule.upper()))
+                return float(PrismOps.get_statistic(rasterCellIdx, dataPath, statisticRules,
+                                                    timeRange, timeMethod))
             else:
-                value = arcpy.GetRasterProperties_management(outExtractByMask, statisticRule)
+                value = arcpy.GetRasterProperties_management(outExtractByMask, statisticRules[0])
                 return float(value.getOutput(0))
           
         except:
@@ -462,7 +508,7 @@ class SpatialOps(object):
         finally:
             outExtractByMask = None           
             mask = None
-            if sr != None: del sr; sr = None
+            if sr is not None: del sr; sr = None
             self._LicenseManager("Spatial",False)
                         
     def getRasterPercentAreas(self,inRaster, maskFeature, uniqueRasterIDfield='VALUE',rasterValueField='COUNT'):
@@ -473,7 +519,7 @@ class SpatialOps(object):
         try:
             arcpy.env.cellSize = "MINOF"
             arcpy.env.overwriteOutput = True
-             #define land use key value dictionary with all possible values
+            #define land use key value dictionary with all possible values
             for row in arcpy.da.SearchCursor(inRaster, uniqueRasterIDfield):
                 results[str(row[0])] = 0
             #next row
@@ -483,8 +529,8 @@ class SpatialOps(object):
             #arcpy.BuildRasterAttributeTable_management(outExtractByMask, "Overwrite")
             rows = arcpy.SearchCursor(outExtractByMask, "", "", "VALUE; COUNT")
             for row in rows:
-                v = r.getValue("VALUE")  
-                c = r.getValue("COUNT")  
+                v = row.getValue("VALUE")  
+                c = row.getValue("COUNT")  
                 print v,c
 
             ##get total cell count for percent area computation
@@ -541,19 +587,21 @@ class SpatialOps(object):
             constfield = arcpy.da.TableToNumPyArray(os.path.join(self._TempLocation,"const1.img"), rasterValueField, skip_nulls=True)
 
             totalCount = float(constfield[rasterValueField].sum())
-
-            SQLClause = " OR ".join(map(lambda s: uniqueRasterIDfield +"=" + s,ClassificationCodes.strip().split(",")))
-            
+            if ClassificationCodes is not None:
+                SQLClause = " OR ".join(map(lambda s: uniqueRasterIDfield +"=" + s,ClassificationCodes.strip().split(",")))
+            else:
+                SQLClause = "VALUE > 0"
 
             # Execute ExtractByAttributes
             #ensure spatial analyst is checked out
             attExtract = arcpy.sa.ExtractByAttributes(inRaster, SQLClause)  
-            #must save raster 
-            attExtract.save(os.path.join(self._TempLocation,"attExtract.img"))                
+            #must save raster
+            unique_name_img = arcpy.CreateUniqueName(os.path.join(self._TempLocation, "xxx.img"))
+            attExtract.save(unique_name_img)
             if self.isRasterALLNoData(attExtract): return float(0)
             #Does not respect the workspace dir, so need to set it explicitly
-            attField = arcpy.da.TableToNumPyArray(os.path.join(self._TempLocation,"attExtract.img"), rasterValueField, skip_nulls=True)            
-            results  = float(attField[rasterValueField].sum())/totalCount
+            attField = arcpy.da.TableToNumPyArray(unique_name_img, rasterValueField, skip_nulls=True) #I assume I should use the same variable over, but it's unclear to me -- JWX          
+            results  = (float(attField[rasterValueField].sum())/totalCount)*100 #For a percentage the result should be multiplied by 100 -- JWX
             
         except:
             tb = traceback.format_exc()
@@ -561,12 +609,12 @@ class SpatialOps(object):
             return self.getValueAtCentroid(mask, inRaster)
         finally:
             #local clean up
-            if attField != None: del attField; attField = None    
+            if attField is not None: del attField; attField = None    
             attExtract = None   
-            if constfield != None: del constfield; constfield = None
+            if constfield is not None: del constfield; constfield = None
             const1 = None
             mask = None
-            if sr != None: del sr; sr = None
+            if sr is not None: del sr; sr = None
             self._LicenseManager("Spatial",False) 
                
         return results

@@ -33,11 +33,11 @@ import arcpy
 from arcpy import env
 from arcpy.sa import *
 import json
-import WiMLib
+import WIMLib
 
-import WiMLib.WiMLogging as WiMLogging
+import WIMLib.WiMLogging as WiMLogging
 
-from WiMLib.Config import Config
+from WIMLib.Config import Config
 #endregion
 
 class MapLayer(object):
@@ -89,7 +89,7 @@ class MapLayer(object):
             self.Activated = True;
         except:
             tb = traceback.format_exc()
-            WiMLib.WiMLogging.sm(tb,type="Error", errorID=0) #changed by jwx
+            WIMLib.WiMLogging.sm(tb,type="Error", errorID=0) #changed by jwx
             self.Activated = False
     
     #endregion   
@@ -118,7 +118,7 @@ class MapLayer(object):
 
         except:
             tb = traceback.format_exc()
-            WiMLib.WiMLogging.sm(tb,type="Error", errorID=0) #changed by jwx
+            WIMLib.WiMLogging.sm(tb,type="Error", errorID=0) #changed by jwx
             return ""
             msg = tb 
         finally:
