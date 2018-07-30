@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: WIMLib
-Version: 0.0.2
+Version: 0.0.3
 Summary: WIMLib is a custom reusable libraries and objects for handling geojson, logging, and other spatial operations leveraging ESRI ArGIS.
 Home-page: https://github.com/USGS-WiM/WIMLib
 Author: Jeremy K. Newson Web Informatics and Mapping

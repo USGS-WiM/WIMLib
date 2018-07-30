@@ -4,7 +4,7 @@ with open("readme.md", "r") as fh:
 
 setuptools.setup(
     name='WIMLib',
-    version='0.0.2',
+    version='0.0.3',
     packages=setuptools.find_packages(),
     description='WIMLib is a custom reusable libraries and objects for handling geojson, logging, and other spatial operations leveraging ESRI ArGIS.',
     long_description=long_description,
