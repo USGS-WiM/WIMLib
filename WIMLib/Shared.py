@@ -26,6 +26,7 @@ import csv
 
 CF_ACR2SQKILOMETER = 0.00404685642              # 1 acres = 0.00404685642 square kilometers
 CF_SQMETERS2SQKILOMETER = 0.000001              # 1 square meter = 1.0 x 10-6 square kilometers
+CF_MILLIMETER2FOOT =0.003280841666667           # 1 millimeter = 0.003280841666667 feet
 
 def GetWorkspaceDirectory(workingdirectory, projID="", workspaceID=""):
 

@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: WIMLib
-Version: 0.0.3
+Version: 0.1.1
 Summary: WIMLib is a custom reusable libraries and objects for handling geojson, logging, and other spatial operations leveraging ESRI ArGIS.
 Home-page: https://github.com/USGS-WiM/WIMLib
 Author: Jeremy K. Newson Web Informatics and Mapping
@@ -14,6 +14,16 @@ Description: ![WiM](wimlogo.png)
         
         ### Installing
         [ python WIMLib package](https://pypi.org/project/WIMLib/): `pip install WIMLib`
+        
+        ### Updating package from pypi
+        `pip install WIMLib--upgrade`
+        
+        ### Updating Library
+        for more information see [packing-project tutorial](https://packaging.python.org/tutorials/packaging-projects/)
+        Build distribution file and store in dist folder
+        `python setup.py sdist bdist_wheel`
+        upload to pypi
+        `twine upload dist/*`
         
         ### Prerequisites
         ArcGIS 10.x

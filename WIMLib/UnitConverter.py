@@ -6,7 +6,7 @@
 #
 #    authors:  John Wall - Ph.D. Student NC State University
 #
-#    purpose:  This code performs various conversion calculations for StreamStats
+#    purpose:  This code performs various conversion calculations
 #
 #      dates:  28 FEB 2017 - Created
 #

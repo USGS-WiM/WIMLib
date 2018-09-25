@@ -22,20 +22,33 @@ import os
 import logging
 #endregion
 
-#region Constructor
-LogMessages =[]
-""" Handles logging  """
-def init(logpath, fileName):  
-    if not os.path.exists(logpath):
-        os.makedirs(logpath)
-         
-    logdir = os.path.join(logpath, fileName)
-    logging.basicConfig(filename=logdir, format ='%(asctime)s %(message)s', level=logging.DEBUG)
-
-def sm(msg, type="INFO", errorID=0):
-    LogMessages.append(type +':' + msg.replace('_',' '))
-#     print(type +' ' + str(errorID) + ' ' + msg)
-    if type in ('ERROR'): logging.error(str(errorID) +' ' + msg)
-    else : logging.info(msg)
+class WiMLogging:
+    class __WiMLogging:
+        def __init__(self,logdir=None):
+            self.CanLogToFile = False
+            self.LogMessages =[]
+            if (not logdir == None): 
+                self.CanLogToFile =True
+                logging.basicConfig(filename=logdir, format ='%(asctime)s %(message)s', level=logging.DEBUG)
 
 
+    instance = None
+    def __init__(self, logpath = None, fileName = "log.log"):
+        if not WiMLogging.instance:
+            dir = None
+            if not logpath == None:
+                if not os.path.exists(logpath):
+                    os.makedirs(logpath)     
+                dir = os.path.join(logpath, fileName)
+        
+            WiMLogging.instance = WiMLogging.__WiMLogging(dir)
+
+
+    def sm(self, msg, type="INFO", errorID=0):
+        self.instance.LogMessages.append(type +':' + msg.replace('_',' '))
+    #     print(type +' ' + str(errorID) + ' ' + msg)
+        if (self.instance.CanLogToFile):
+            if type in ('ERROR'): logging.error(str(errorID) +' ' + msg)
+            else : logging.info(msg)
+        else:
+            print (type, msg)

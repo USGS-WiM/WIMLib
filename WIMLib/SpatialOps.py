@@ -45,11 +45,14 @@ import numpy as np
 class SpatialOps(object):
     #region Constructor
     def __init__(self, workspacePath):
-        #public properties
-        
-        #protected properties
+       
         self._WorkspaceDirectory = workspacePath
-        self._TempLocation = tempfile.mkdtemp(dir=os.path.join(self._WorkspaceDirectory,"Temp"))  
+        tempdir = os.path.join(self._WorkspaceDirectory,"Temp")
+        
+        #make sure tempdir exists
+        if not os.path.exists(tempdir):
+            os.makedirs(tempdir)
+        self._TempLocation = tempfile.mkdtemp(dir=tempdir)  
         
         arcpy.env.workspace = self._TempLocation 
         arcpy.env.overwriteOutput = True

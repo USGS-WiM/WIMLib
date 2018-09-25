@@ -1,6 +1,5 @@
 #------------------------------------------------------------------------------
 #----- MapLayer.py ------------------------------------------------------------
-#----- Formerly known as Delineate.py -----------------------------------------
 #------------------------------------------------------------------------------
 #
 #  copyright:  2016 WiM - USGS
@@ -8,7 +7,7 @@
 #    authors:  John Wall - Ph.D. Student NC State University
 #              Jeremy K. Newson - USGS Web Informatics and Mapping (WiM)
 #              
-#    purpose:  Delineate using mask using ArcGIS's Python library (arcpy)
+#    purpose:  open and activates layers
 #
 #      usage:  THIS SECTION NEEDS TO BE UPDATED
 #
@@ -34,13 +33,22 @@ from arcpy import env
 from arcpy.sa import *
 import json
 import WIMLib
-
+import time
 import WIMLib.WiMLogging as WiMLogging
 
 from WIMLib.Config import Config
 #endregion
 
 class MapLayer(object):
+    #region properties
+    @property
+    def Layer(self):
+        if (self.Activated):
+            if(arcpy.Exists(self.Name)): return self.Name
+            return arcpy.MakeFeatureLayer_management(self.Dataset, self.Name)
+        else:
+            return None;
+    #endregion
     #region Constructor
     def __init__(self, mlayerDef, tileID = "", queryfeature = None):
         self.ID =  mlayerDef.ID
@@ -54,7 +62,7 @@ class MapLayer(object):
         self.DatasetType = mlayerDef.DatasetType
         self.DatasetName = mlayerDef.DataSetName
         self.__queryfeature = queryfeature
-   
+        
         self.Activated = False
 
         self.Dataset = None
@@ -83,13 +91,19 @@ class MapLayer(object):
             #check if dataset exists
             if not arcpy.Exists(datasetPath):
                 raise Exception(datasetPath +" doesn't exist")
+            #test for schema lock, before continue
+            trys=0
+            while arcpy.TestSchemaLock(datasetPath) or trys>6:
+                time.sleep(10)
+                trys+=1
+            #next
 
             self.Dataset = datasetPath
             self.spatialreference = arcpy.Describe(datasetPath).spatialReference
             self.Activated = True;
         except:
             tb = traceback.format_exc()
-            WIMLib.WiMLogging.sm(tb,type="Error", errorID=0) #changed by jwx
+            WIMLib.WiMLogging.sm(tb,type="Error", errorID=0)
             self.Activated = False
     
     #endregion   
@@ -125,7 +139,7 @@ class MapLayer(object):
             if row != None: del row
             if cursor != None: del cursor
             if selectlyr != None: del selectlyr  
-                       
+                      
     #endregion
 
 class MapLayerDef(object):

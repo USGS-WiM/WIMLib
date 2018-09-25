@@ -7,6 +7,16 @@ WIMLib is a custom reusable libraries and objects for handling geojson, logging,
 ### Installing
 [ python WIMLib package](https://pypi.org/project/WIMLib/): `pip install WIMLib`
 
+### Updating package from pypi
+`pip install WIMLib--upgrade`
+
+### Updating Library
+for more information see [packing-project tutorial](https://packaging.python.org/tutorials/packaging-projects/)
+Build distribution file and store in dist folder
+`python setup.py sdist bdist_wheel`
+upload to pypi
+`twine upload dist/*`
+
 ### Prerequisites
 ArcGIS 10.x
 * You will be using ESRI's ArcGIS ArcPy library for geoprocessing. If you have not installed ArcGIS before, you can skip to the next section.
