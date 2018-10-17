@@ -93,7 +93,7 @@ class MapLayer(object):
                 raise Exception(datasetPath +" doesn't exist")
             #test for schema lock, before continue
             trys=0
-            while arcpy.TestSchemaLock(datasetPath) or trys>6:
+            while arcpy.TestSchemaLock(datasetPath) or trys<6:
                 time.sleep(10)
                 trys+=1
             #next
