@@ -4,9 +4,9 @@ with open("readme.md", "r") as fh:
 
 setuptools.setup(
     name='WIMLib',
-    version='0.1.1',
+    version='2.0.0',
     packages=setuptools.find_packages(),
-    description='WIMLib is a custom reusable libraries and objects for handling geojson, logging, and other spatial operations leveraging ESRI ArGIS.',
+    description='WIMLib is a custom reusable libraries and objects for logging, and other operations, this version is confied to basin functions others to come',
     long_description=long_description,
     long_description_content_type="text/markdown",
 	license='Public Domain',
@@ -15,8 +15,7 @@ setuptools.setup(
     author_email='jknewson@usgs.gov',
     install_requires=[
           'requests',
-          'certifi',
-		  'numpy'
+          'certifi'
       ]
      #dependency_links=['http://github.com/user/repo/tarball/master#egg=package-1.0']
     )

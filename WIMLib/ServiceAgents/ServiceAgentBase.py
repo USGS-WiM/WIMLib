@@ -24,7 +24,7 @@ import certifi
 import json
 import string
 import traceback
-from  WIMLib import WiMLogging
+from  WIMLib.WiMLogging import WiMLogging as log
 import re
 
 from datetime import date, timedelta
@@ -52,14 +52,9 @@ class ServiceAgentBase(object):
             except:
                 self._sm("Error: file " + os.path.basename(resource) + " does not exist within Gages iii", 1.62, 'ERROR')
                 return ''
-        except requests.exceptions as e:
-            if hasattr(e, 'reason'):
-                self._sm("Error:, failed to reach a server " + e.reason.strerror, 1.54, 'ERROR')
+        except requests.exceptions.RequestException as e:
+                self._sm("Error:, failed to reach a server " + e.strerror, 1.54, 'ERROR')
                 return ""
-
-            elif hasattr(e, 'code'):
-                self._sm("Error: server couldn't fullfill request " + e.code, 1.58, 'ERROR')
-                return ''
         except:
             tb = traceback.format_exc()            
             self._sm("url exception failed " + resource + ' ' + tb, 1.60, 'ERROR')
@@ -72,7 +67,7 @@ class ServiceAgentBase(object):
         return -1
 
     def _sm(self,msg,type="INFO", errorID=0):        
-        WiMLogging.sm(msg,type="INFO", errorID=0)
+        log().sm(msg,type="INFO", errorID=0)
         
     #endregion
 #end class

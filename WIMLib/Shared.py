@@ -19,7 +19,7 @@
 import os
 import sys
 import datetime
-from WIMLib import WiMLogging
+from WIMLib.WiMLogging import WiMLogging as log
 import traceback
 import string
 import csv
@@ -36,6 +36,7 @@ def GetWorkspaceDirectory(workingdirectory, projID="", workspaceID=""):
     WorkspaceDirectory = os.path.join(workingdirectory, workspaceID)
     if not os.path.exists(WorkspaceDirectory):
         os.makedirs(WorkspaceDirectory)
+        log().sm("workspace createdsucceded")
 
     return WorkspaceDirectory
 
@@ -49,7 +50,7 @@ def try_parse(string, fail=None):
     try:
         return float(string)
     except Exception:
-        return fail;
+        return fail
 def readCSVFile( file):
     #https://docs.python.org/2/library/csv.html
     f = None
@@ -58,34 +59,39 @@ def readCSVFile( file):
             return []
         f = open(file, 'r')
         #csv.field_size_limit(sys.maxsize)
-        return map(lambda s: s, csv.reader(f))
+        data = []
+        reader = csv.reader(f)
+        for row in reader:
+            data.append(row)
+        #return map(lambda s: s, csv.reader(f))
+        return data
     except:
         tb = traceback.format_exc()
-        WiMLogging.sm("Error reading csv file "+tb)
+        log().sm("Error reading csv file "+tb)
     finally:
         if not f == None:
             if not f.closed :
-                f.close();
+                f.close()
 def appendLineToFile(file, content):
     f = None
     try:
         f = open(file, "a")            
-        f.write(string.lower(content + '\n'))
+        f.write(content + '\n')
     except:
         tb = traceback.format_exc()
-        WiMLogging.sm("Error appending line to file "+tb)
+        log().sm("Error appending line to file "+tb)
 
     finally:
         if not f == None or not f.closed :
-            f.close();
+            f.close()
 def writeToFile(file, content):
     f = None
     try:
         f = open(file, "w")
-        f.writelines(map(lambda x:x+'\n', content))
+        f.writelines(map(lambda x:x+'\n', content))        
     except:
         tb = traceback.format_exc()
-        WiMLogging.sm("Error writing to file "+tb)
+        log().sm("Error writing to file "+tb)
     finally:
         if not f == None or not f.closed :
-            f.close();
+            f.close()

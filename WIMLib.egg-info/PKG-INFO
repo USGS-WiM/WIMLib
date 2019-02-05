@@ -1,7 +1,7 @@
 Metadata-Version: 2.1
 Name: WIMLib
-Version: 0.1.1
-Summary: WIMLib is a custom reusable libraries and objects for handling geojson, logging, and other spatial operations leveraging ESRI ArGIS.
+Version: 2.0.0
+Summary: WIMLib is a custom reusable libraries and objects for logging, and other operations, this version is confied to basin functions others to come
 Home-page: https://github.com/USGS-WiM/WIMLib
 Author: Jeremy K. Newson Web Informatics and Mapping
 Author-email: jknewson@usgs.gov
@@ -9,8 +9,8 @@ License: Public Domain
 Description: ![WiM](wimlogo.png)
         
         # WIMLib
-        
-        WIMLib is a custom reusable libraries and objects for handling geojson, logging, and spatial operations leveraging ESRI ArGIS.
+        Current version (2.0.0) have been updated to python 3.7.2 with basin functionality (no spatial or geojson handling), which will come in future version.
+        WIMLib is a custom reusable libraries and objects for handling geojson, logging, and spatial operations.
         
         ### Installing
         [ python WIMLib package](https://pypi.org/project/WIMLib/): `pip install WIMLib`
