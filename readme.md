@@ -2,6 +2,10 @@
 	<span><img src="https://wim.usgs.gov/visuals/branding/wimvector.png">Web Informatics and Mapping</span>
 </a>
 
+Update, 2024-05-22: Deprecated
+
+This repository has been has moved to a different hosting platform and is no longer being actively maintained. Please see https://code.usgs.gov/WiM/wimlib (USGS internal access may be required) for latest updates related to this effort.
+
 # Summary
 WiMPy is a custom reusable libraries and objects for handling geojson, logging, and spatial operations leveraging ESRI ArGIS.
 
