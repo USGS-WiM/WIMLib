@@ -1,5 +1,9 @@
 ![WiM](wimlogo.png)
 
+Update, 2024-05-22: Deprecated
+
+This repository has been has moved to a different hosting platform and is no longer being actively maintained. Please see https://code.usgs.gov/WiM/wimlib (USGS internal access may be required) for latest updates related to this effort.
+
 # WIMLib
 Current version (2.0.0) have been updated to python 3.7.2 with basin functionality (no spatial or geojson handling), which will come in future version.
 WIMLib is a custom reusable libraries and objects for handling geojson, logging, and spatial operations.
