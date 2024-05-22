@@ -1,6 +1,7 @@
 <a href="https://wim.usgs.gov/#/">
 	<span><img src="https://wim.usgs.gov/visuals/branding/wimvector.png">Web Informatics and Mapping</span>
 </a>
+<br>
 
 Update, 2024-05-22: Deprecated
 
